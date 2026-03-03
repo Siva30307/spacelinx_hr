@@ -37,7 +37,14 @@ class AuthService {
 
   Future<bool> loginWithMicrosoft() async {
     try {
-      await _oauth.login();
+      final result = await _oauth.login();
+      result.fold(
+        (failure) {
+          debugPrint('AuthService Microsoft Login Failed: ${failure.toString()}');
+        },
+        (token) {}, // Success
+      );
+      
       final String? token = await _oauth.getIdToken();
       if (token != null) {
         await saveToken(token);
