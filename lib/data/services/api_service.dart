@@ -27,6 +27,22 @@ class ApiService {
 
   Dio get client => _dio;
 
+  Future<Response> get(String path, {Map<String, dynamic>? queryParameters}) async {
+    return _dio.get(path, queryParameters: queryParameters);
+  }
+
+  Future<Response> post(String path, {dynamic data}) async {
+    return _dio.post(path, data: data);
+  }
+
+  Future<Response> put(String path, {dynamic data}) async {
+    return _dio.put(path, data: data);
+  }
+
+  Future<Response> delete(String path, {dynamic data}) async {
+    return _dio.delete(path, data: data);
+  }
+
   // Potential Auth implementation
   Future<Response> login(String email, String password) async {
     return _dio.post('/Auth/login', data: {'email': email, 'password': password});

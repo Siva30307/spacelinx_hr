@@ -43,3 +43,21 @@ class Designation {
   factory Designation.fromJson(Map<String, dynamic> json) => _$DesignationFromJson(json);
   Map<String, dynamic> toJson() => _$DesignationToJson(this);
 }
+
+@JsonSerializable()
+class EmployeeRefModel {
+  final String id;
+  final String firstName;
+  final String lastName;
+  final String? displayName;
+
+  EmployeeRefModel({
+    required this.id,
+    required this.firstName,
+    required this.lastName,
+    this.displayName,
+  });
+
+  factory EmployeeRefModel.fromJson(Map<String, dynamic> json) => _$EmployeeRefModelFromJson(json);
+  Map<String, dynamic> toJson() => _$EmployeeRefModelToJson(this);
+}

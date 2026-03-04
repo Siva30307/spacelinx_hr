@@ -41,3 +41,19 @@ Designation _$DesignationFromJson(Map<String, dynamic> json) =>
 
 Map<String, dynamic> _$DesignationToJson(Designation instance) =>
     <String, dynamic>{'name': instance.name};
+
+EmployeeRefModel _$EmployeeRefModelFromJson(Map<String, dynamic> json) =>
+    EmployeeRefModel(
+      id: json['id'] as String,
+      firstName: json['firstName'] as String,
+      lastName: json['lastName'] as String,
+      displayName: json['displayName'] as String?,
+    );
+
+Map<String, dynamic> _$EmployeeRefModelToJson(EmployeeRefModel instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'firstName': instance.firstName,
+      'lastName': instance.lastName,
+      'displayName': instance.displayName,
+    };
