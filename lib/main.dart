@@ -9,7 +9,11 @@ import 'ui/screens/main_screen.dart';
 import 'ui/screens/auth/login_screen.dart';
 import 'core/auth/azure_auth_config.dart';
 import 'data/repositories/leave_repository.dart';
+import 'data/repositories/employee_repository.dart';
+import 'data/repositories/attendance_repository.dart';
 import 'providers/leave_provider.dart';
+import 'providers/employee_provider.dart';
+import 'providers/attendance_provider.dart';
 import 'providers/navigation_provider.dart';
 
 void main() {
@@ -17,6 +21,8 @@ void main() {
   final apiClient = ApiClient();
   final dashboardRepo = DashboardRepository(apiClient);
   final leaveRepo = LeaveRepository(apiClient);
+  final employeeRepo = EmployeeRepository(apiClient);
+  final attendanceRepo = AttendanceRepository(apiClient);
 
   runApp(
     MultiProvider(
@@ -24,6 +30,8 @@ void main() {
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => DashboardProvider(dashboardRepo)),
         ChangeNotifierProvider(create: (_) => LeaveProvider(leaveRepo)),
+        ChangeNotifierProvider(create: (_) => EmployeeProvider(employeeRepo)),
+        ChangeNotifierProvider(create: (_) => AttendanceProvider(attendanceRepo)),
         ChangeNotifierProvider(create: (_) => NavigationProvider()),
       ],
       child: const SpaceLinxApp(),

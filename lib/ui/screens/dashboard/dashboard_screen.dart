@@ -84,7 +84,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       Icons.beach_access_outlined,
                       Colors.teal,
                       onTap: () {
-                        context.read<NavigationProvider>().setTab(1);
+                        context.read<NavigationProvider>().setTab(2);
                       },
                     ),
                   ],

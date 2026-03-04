@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/navigation_provider.dart';
 import 'dashboard/dashboard_screen.dart';
+import 'employee/employee_overview_screen.dart';
 import 'leave/leave_overview_screen.dart';
+import 'attendance/attendance_overview_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -14,9 +16,9 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   final List<Widget> _screens = [
     const DashboardScreen(),
+    const EmployeeOverviewScreen(),
     const LeaveOverviewScreen(),
-    const Center(child: Text('Attendance (Coming Soon)', style: TextStyle(color: Colors.white))),
-    const Center(child: Text('Profile (Coming Soon)', style: TextStyle(color: Colors.white))),
+    const AttendanceOverviewScreen(),
   ];
 
   @override
@@ -53,19 +55,19 @@ class _MainScreenState extends State<MainScreen> {
               label: 'Dashboard',
             ),
             BottomNavigationBarItem(
+              icon: Icon(Icons.people_outline),
+              activeIcon: Icon(Icons.people),
+              label: 'Employees',
+            ),
+            BottomNavigationBarItem(
               icon: Icon(Icons.beach_access_outlined),
               activeIcon: Icon(Icons.beach_access),
               label: 'Leave',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.calendar_today_outlined),
-              activeIcon: Icon(Icons.calendar_today),
+              icon: Icon(Icons.schedule_outlined),
+              activeIcon: Icon(Icons.schedule),
               label: 'Attendance',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.person_outline),
-              activeIcon: Icon(Icons.person),
-              label: 'Profile',
             ),
           ],
         ),
