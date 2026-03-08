@@ -17,7 +17,7 @@ class AuthInterceptor extends Interceptor {
     
     // Add other common headers
     options.headers['Accept'] = 'application/json';
-    options.headers['Content-Type'] = 'application/json';
+    options.contentType = Headers.jsonContentType;
     options.headers['SPACELINX-APP-NAME'] = 'SPACELINX-HR';
 
     return handler.next(options);

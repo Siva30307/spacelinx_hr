@@ -24,8 +24,6 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen> {
   }
 
   void _showForm({ShiftAssignmentReadModel? editItem}) {
-    final empProvider = Provider.of<EmployeeProvider>(context, listen: false);
-    final attProvider = Provider.of<AttendanceProvider>(context, listen: false);
     String? selectedEmployeeId = editItem?.employeeId;
     String? selectedShiftId = editItem?.shiftId;
     final fromCtrl = TextEditingController(text: editItem?.effectiveFrom ?? '');
@@ -48,24 +46,34 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen> {
                   children: [
                     Text(editItem != null ? 'Edit Assignment' : 'Add Assignment', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
                     const SizedBox(height: 16),
-                    DropdownButtonFormField<String>(
-                      value: selectedEmployeeId,
-                      dropdownColor: const Color(0xFF1E293B),
-                      style: const TextStyle(color: Colors.white),
-                      decoration: _inputDecor('Employee'),
-                      hint: Text('Select Employee', style: TextStyle(color: Colors.white.withValues(alpha: 0.4))),
-                      items: empProvider.employeeLookup.map((e) => DropdownMenuItem(value: e.id, child: Text(e.fullName))).toList(),
-                      onChanged: (v) => setModalState(() => selectedEmployeeId = v),
-                    ),
-                    const SizedBox(height: 12),
-                    DropdownButtonFormField<String>(
-                      value: selectedShiftId,
-                      dropdownColor: const Color(0xFF1E293B),
-                      style: const TextStyle(color: Colors.white),
-                      decoration: _inputDecor('Shift'),
-                      hint: Text('Select Shift', style: TextStyle(color: Colors.white.withValues(alpha: 0.4))),
-                      items: attProvider.shiftLookup.map((s) => DropdownMenuItem(value: s.id, child: Text('${s.code} - ${s.name}'))).toList(),
-                      onChanged: (v) => setModalState(() => selectedShiftId = v),
+                    Consumer2<EmployeeProvider, AttendanceProvider>(
+                      builder: (context, empProvider, attProvider, _) {
+                        return Column(
+                          children: [
+                            DropdownButtonFormField<String>(
+                              value: selectedEmployeeId,
+                              dropdownColor: const Color(0xFF1E293B),
+                              style: const TextStyle(color: Colors.white),
+                              isExpanded: true,
+                              decoration: _inputDecor('Employee'),
+                              hint: Text(empProvider.isLoading ? 'Loading...' : 'Select Employee', style: TextStyle(color: Colors.white.withValues(alpha: 0.4))),
+                              items: empProvider.employeeLookup.map((e) => DropdownMenuItem(value: e.id, child: Text(e.fullName, overflow: TextOverflow.ellipsis))).toList(),
+                              onChanged: (v) => setModalState(() => selectedEmployeeId = v),
+                            ),
+                            const SizedBox(height: 12),
+                            DropdownButtonFormField<String>(
+                              value: selectedShiftId,
+                              dropdownColor: const Color(0xFF1E293B),
+                              style: const TextStyle(color: Colors.white),
+                              isExpanded: true,
+                              decoration: _inputDecor('Shift'),
+                              hint: Text(attProvider.isLoading ? 'Loading...' : 'Select Shift', style: TextStyle(color: Colors.white.withValues(alpha: 0.4))),
+                              items: attProvider.shiftLookup.map((s) => DropdownMenuItem(value: s.id, child: Text('${s.code} - ${s.name}', overflow: TextOverflow.ellipsis))).toList(),
+                              onChanged: (v) => setModalState(() => selectedShiftId = v),
+                            ),
+                          ],
+                        );
+                      }
                     ),
                     const SizedBox(height: 12),
                     _buildDateField(ctx, fromCtrl, 'Effective From'),
@@ -74,6 +82,10 @@ class _ShiftAssignmentScreenState extends State<ShiftAssignmentScreen> {
                     const SizedBox(height: 20),
                     ElevatedButton(
                       onPressed: () async {
+                        if (selectedEmployeeId == null || selectedShiftId == null || fromCtrl.text.isEmpty) {
+                          ScaffoldMessenger.of(this.context).showSnackBar(const SnackBar(content: Text('Please select Employee, Shift, and Effective From date'), backgroundColor: Colors.red));
+                          return;
+                        }
                         final data = {
                           'employeeId': selectedEmployeeId,
                           'shiftId': selectedShiftId,

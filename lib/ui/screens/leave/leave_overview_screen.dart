@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:spacelinx_hr/providers/leave_provider.dart';
 import 'package:spacelinx_hr/ui/widgets/common/glass_card.dart';
+import '../../../core/theme/app_theme.dart';
+import 'leave_balance_screen.dart';
 import 'leave_type_list_screen.dart';
 import 'leave_policy_list_screen.dart';
 import 'leave_request_list_screen.dart';
@@ -15,60 +17,89 @@ class LeaveOverviewScreen extends StatefulWidget {
 }
 
 class _LeaveOverviewScreenState extends State<LeaveOverviewScreen> {
+
   @override
   void initState() {
     super.initState();
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final leaveProvider = Provider.of<LeaveProvider>(context, listen: false);
+      final leaveProvider = context.read<LeaveProvider>();
+
       leaveProvider.fetchLeaveTypes();
       leaveProvider.fetchLeaveRequests();
+      leaveProvider.fetchLeavePolicies();
+      leaveProvider.fetchHolidayCalendars();
     });
   }
 
   @override
   Widget build(BuildContext context) {
+
     return Scaffold(
       backgroundColor: Colors.transparent,
-      body: Consumer<LeaveProvider>(
-        builder: (context, provider, _) {
+      body: Builder(
+        builder: (context) {
+
+          final provider = context.watch<LeaveProvider>();
+
+          final leaveTypesCount = provider.leaveTypes.length;
+          final leavePoliciesCount = provider.leavePolicies.length;
           final pendingCount = provider.leaveRequests
-              .where((r) => r.status == 'Pending')
+              .where((r) => r.status.toLowerCase() == 'pending')
               .length;
 
           return Padding(
-            padding: const EdgeInsets.all(24.0),
+            padding: const EdgeInsets.all(20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: 48),
+
                 Text(
-                  'Leave Management',
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
+                  'Leave',
+                  style: Theme.of(context)
+                      .textTheme
+                      .headlineMedium
+                      ?.copyWith(fontWeight: FontWeight.w800),
                 ),
+
+                const SizedBox(height: 4),
+
+                const Text(
+                  'Requests, balances, policies',
+                  style: TextStyle(
+                    fontSize: 13.5,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+
                 const SizedBox(height: 32),
+
                 Expanded(
                   child: GridView.count(
                     crossAxisCount: 2,
                     crossAxisSpacing: 16,
                     mainAxisSpacing: 16,
                     children: [
+
+                      /// Leave Types
                       _buildOverviewCard(
                         context,
                         title: 'Leave Types',
-                        value: provider.leaveTypes.length.toString(),
+                        value: leaveTypesCount.toString(),
                         subtitle: 'configured',
                         icon: Icons.list_alt,
                         color: Colors.blue,
                         onTap: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (_) => const LeaveTypeListScreen()),
+                            MaterialPageRoute(
+                              builder: (_) => const LeaveTypeListScreen(),
+                            ),
                           );
                         },
                       ),
+
+                      /// Pending Requests
                       _buildOverviewCard(
                         context,
                         title: 'Pending Requests',
@@ -79,24 +110,52 @@ class _LeaveOverviewScreenState extends State<LeaveOverviewScreen> {
                         onTap: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (_) => const LeaveRequestListScreen()),
+                            MaterialPageRoute(
+                              builder: (_) => const LeaveRequestListScreen(),
+                            ),
                           );
                         },
                       ),
+
+                      /// Leave Balances
+                      _buildOverviewCard(
+                        context,
+                        title: 'Leave Balances',
+                        value: provider.leaveBalances.isEmpty
+                            ? '—'
+                            : provider.leaveBalances.length.toString(),
+                        subtitle: 'view balances',
+                        icon: Icons.account_balance_wallet_outlined,
+                        color: Colors.teal,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const LeaveBalanceScreen(),
+                            ),
+                          );
+                        },
+                      ),
+
+                      /// Leave Policies
                       _buildOverviewCard(
                         context,
                         title: 'Leave Policies',
-                        value: provider.leavePolicies.length.toString(),
+                        value: leavePoliciesCount.toString(),
                         subtitle: 'manage policies',
                         icon: Icons.policy,
                         color: Colors.purple,
                         onTap: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (_) => const LeavePolicyListScreen()),
+                            MaterialPageRoute(
+                              builder: (_) => const LeavePolicyListScreen(),
+                            ),
                           );
                         },
                       ),
+
+                      /// Holiday Calendar
                       _buildOverviewCard(
                         context,
                         title: 'Holiday Calendar',
@@ -107,43 +166,15 @@ class _LeaveOverviewScreenState extends State<LeaveOverviewScreen> {
                         onTap: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (_) => const HolidayCalendarScreen()),
+                            MaterialPageRoute(
+                              builder: (_) => const HolidayCalendarScreen(),
+                            ),
                           );
                         },
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 24),
-                Text(
-                  'Quick Links',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white70,
-                      ),
-                ),
-                const SizedBox(height: 16),
-                Wrap(
-                  spacing: 12,
-                  runSpacing: 12,
-                  children: [
-                    _buildQuickLink(context, 'Leave Requests', () {}),
-                    _buildQuickLink(context, 'Leave Types', () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const LeaveTypeListScreen()),
-                      );
-                    }),
-                    _buildQuickLink(context, 'Leave Policies', () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const LeavePolicyListScreen()),
-                      );
-                    }),
-                    _buildQuickLink(context, 'Holiday Calendar', () {}),
-                  ],
-                ),
-                const SizedBox(height: 24),
               ],
             ),
           );
@@ -161,6 +192,7 @@ class _LeaveOverviewScreenState extends State<LeaveOverviewScreen> {
     required Color color,
     required VoidCallback onTap,
   }) {
+
     return GestureDetector(
       onTap: onTap,
       child: GlassCard(
@@ -168,16 +200,22 @@ class _LeaveOverviewScreenState extends State<LeaveOverviewScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+
+
             Icon(icon, size: 40, color: color),
+
             const SizedBox(height: 12),
+
             Text(
               value,
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w800,
                     color: Colors.white,
                   ),
             ),
+
             const SizedBox(height: 4),
+
             Text(
               title,
               style: const TextStyle(
@@ -186,6 +224,7 @@ class _LeaveOverviewScreenState extends State<LeaveOverviewScreen> {
               ),
               textAlign: TextAlign.center,
             ),
+
             Text(
               subtitle,
               style: TextStyle(
@@ -197,21 +236,6 @@ class _LeaveOverviewScreenState extends State<LeaveOverviewScreen> {
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildQuickLink(BuildContext context, String label, VoidCallback onTap) {
-    return OutlinedButton(
-      onPressed: onTap,
-      style: OutlinedButton.styleFrom(
-        foregroundColor: Colors.white,
-        side: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-      ),
-      child: Text(label),
     );
   }
 }

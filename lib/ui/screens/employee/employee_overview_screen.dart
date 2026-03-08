@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:spacelinx_hr/ui/widgets/common/glass_card.dart';
+import '../../../core/theme/app_theme.dart';
 import 'employee_list_screen.dart';
 import 'onboarding_list_screen.dart';
 import 'separation_list_screen.dart';
@@ -17,14 +18,11 @@ class EmployeeOverviewScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Employees',
-                style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white),
-              ),
+              Text('Employees', style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w800)),
               const SizedBox(height: 4),
               Text(
                 'Manage your workforce',
-                style: TextStyle(fontSize: 14, color: Colors.white.withValues(alpha: 0.6)),
+                style: const TextStyle(fontSize: 13.5, color: AppColors.textSecondary),
               ),
               const SizedBox(height: 24),
               GridView.count(
@@ -58,14 +56,6 @@ class EmployeeOverviewScreen extends StatelessWidget {
                     icon: Icons.exit_to_app,
                     gradient: const [Color(0xFFF59E0B), Color(0xFFFBBF24)],
                     onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SeparationListScreen())),
-                  ),
-                  _buildCard(
-                    context,
-                    title: 'Directory',
-                    subtitle: 'Quick lookup',
-                    icon: Icons.contacts,
-                    gradient: const [Color(0xFF8B5CF6), Color(0xFFA78BFA)],
-                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const EmployeeListScreen())),
                   ),
                 ],
               ),

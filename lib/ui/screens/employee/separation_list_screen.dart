@@ -48,14 +48,19 @@ class _SeparationListScreenState extends State<SeparationListScreen> {
                     Text(editItem != null ? 'Edit Separation' : 'Initiate Separation', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
                     const SizedBox(height: 16),
                     // Employee dropdown
-                    DropdownButtonFormField<String>(
-                      value: selectedEmployeeId,
-                      dropdownColor: const Color(0xFF1E293B),
-                      style: const TextStyle(color: Colors.white),
-                      decoration: _inputDecor('Employee'),
-                      hint: Text('Select Employee', style: TextStyle(color: Colors.white.withValues(alpha: 0.4))),
-                      items: provider.employeeLookup.map((e) => DropdownMenuItem(value: e.id, child: Text(e.fullName))).toList(),
-                      onChanged: editItem != null ? null : (v) => setModalState(() => selectedEmployeeId = v),
+                    Consumer<EmployeeProvider>(
+                      builder: (context, empProvider, _) {
+                        return DropdownButtonFormField<String>(
+                          value: selectedEmployeeId,
+                          dropdownColor: const Color(0xFF1E293B),
+                          style: const TextStyle(color: Colors.white),
+                          isExpanded: true,
+                          decoration: _inputDecor('Employee'),
+                          hint: Text(empProvider.isLoading ? 'Loading employees...' : 'Select Employee', style: TextStyle(color: Colors.white.withValues(alpha: 0.4))),
+                          items: empProvider.employeeLookup.map((e) => DropdownMenuItem(value: e.id, child: Text(e.fullName, overflow: TextOverflow.ellipsis))).toList(),
+                          onChanged: editItem != null ? null : (v) => setModalState(() => selectedEmployeeId = v),
+                        );
+                      }
                     ),
                     const SizedBox(height: 12),
                     // Separation Type
@@ -81,6 +86,10 @@ class _SeparationListScreenState extends State<SeparationListScreen> {
                     const SizedBox(height: 20),
                     ElevatedButton(
                       onPressed: () async {
+                        if (selectedEmployeeId == null) {
+                          ScaffoldMessenger.of(this.context).showSnackBar(const SnackBar(content: Text('Please select an employee'), backgroundColor: Colors.red));
+                          return;
+                        }
                         final data = {
                           'employeeId': selectedEmployeeId,
                           'separationType': separationType,

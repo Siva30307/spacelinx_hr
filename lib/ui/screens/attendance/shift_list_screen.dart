@@ -59,14 +59,23 @@ class _ShiftListScreenState extends State<ShiftListScreen> {
                     const SizedBox(height: 20),
                     ElevatedButton(
                       onPressed: () async {
+                        if (codeCtrl.text.isEmpty || nameCtrl.text.isEmpty || startCtrl.text.isEmpty || endCtrl.text.isEmpty) {
+                          ScaffoldMessenger.of(this.context).showSnackBar(const SnackBar(content: Text('Please fill all required fields (Code, Name, Start/End Time)'), backgroundColor: Colors.red));
+                          return;
+                        }
+                        
+                        // Parse times to ensure HH:mm:ss if possible, though API might accept HH:mm
+                        String startT = startCtrl.text.contains(':') && startCtrl.text.split(':').length == 2 ? '${startCtrl.text}:00' : startCtrl.text;
+                        String endT = endCtrl.text.contains(':') && endCtrl.text.split(':').length == 2 ? '${endCtrl.text}:00' : endCtrl.text;
+
                         final data = {
                           'code': codeCtrl.text,
                           'name': nameCtrl.text,
-                          'startTime': startCtrl.text,
-                          'endTime': endCtrl.text,
+                          'startTime': startT,
+                          'endTime': endT,
                           'graceMinutes': int.tryParse(graceCtrl.text) ?? 15,
-                          'halfDayHours': 4,
-                          'fullDayHours': int.tryParse(fullDayCtrl.text) ?? 8,
+                          'halfDayHours': (double.tryParse(fullDayCtrl.text) ?? 8.0) / 2.0,
+                          'fullDayHours': double.tryParse(fullDayCtrl.text) ?? 8.0,
                           'isNightShift': isNight,
                         };
                         final provider = Provider.of<AttendanceProvider>(ctx, listen: false);

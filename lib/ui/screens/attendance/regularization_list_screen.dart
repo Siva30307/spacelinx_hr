@@ -17,14 +17,18 @@ class _RegularizationListScreenState extends State<RegularizationListScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<AttendanceProvider>(context, listen: false).fetchRegularizations();
+      final attProvider = Provider.of<AttendanceProvider>(context, listen: false);
+      attProvider.fetchRegularizations();
+      attProvider.fetchRecords();
       Provider.of<EmployeeProvider>(context, listen: false).fetchEmployeeLookup();
     });
   }
 
+  bool get _isEditMode => false;
+
   void _showForm({AttendanceRegularizationReadModel? editItem}) {
-    final empProvider = Provider.of<EmployeeProvider>(context, listen: false);
     String? selectedEmployeeId = editItem?.employeeId;
+    String? selectedAttendanceId = editItem?.attendanceId;
     final origInCtrl = TextEditingController(text: editItem?.originalCheckIn ?? '');
     final origOutCtrl = TextEditingController(text: editItem?.originalCheckOut ?? '');
     final reqInCtrl = TextEditingController(text: editItem?.requestedCheckIn ?? '');
@@ -48,14 +52,41 @@ class _RegularizationListScreenState extends State<RegularizationListScreen> {
                   children: [
                     Text(editItem != null ? 'Edit Regularization' : 'Add Regularization', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
                     const SizedBox(height: 16),
-                    DropdownButtonFormField<String>(
-                      value: selectedEmployeeId,
-                      dropdownColor: const Color(0xFF1E293B),
-                      style: const TextStyle(color: Colors.white),
-                      decoration: _inputDecor('Employee'),
-                      hint: Text('Select Employee', style: TextStyle(color: Colors.white.withValues(alpha: 0.4))),
-                      items: empProvider.employeeLookup.map((e) => DropdownMenuItem(value: e.id, child: Text(e.fullName))).toList(),
-                      onChanged: editItem != null ? null : (v) => setModalState(() => selectedEmployeeId = v),
+                    Consumer2<EmployeeProvider, AttendanceProvider>(
+                      builder: (context, empProvider, attProvider, _) {
+                        final empRecords = attProvider.records.where((r) => r.employeeId == selectedEmployeeId).toList();
+                        return Column(
+                          children: [
+                            DropdownButtonFormField<String>(
+                              dropdownColor: const Color(0xFF1E293B),
+                              style: const TextStyle(color: Colors.white),
+                              isExpanded: true,
+                              decoration: _inputDecor('Employee'),
+                              hint: Text(empProvider.isLoading ? 'Loading...' : 'Select Employee', style: TextStyle(color: Colors.white.withValues(alpha: 0.4))),
+                              items: empProvider.employeeLookup.map((e) => DropdownMenuItem(value: e.id, child: Text(e.fullName, overflow: TextOverflow.ellipsis))).toList(),
+                              onChanged: editItem != null ? null : (v) => setModalState(() {
+                                selectedEmployeeId = v;
+                                selectedAttendanceId = null;
+                              }),
+                            ),
+                            const SizedBox(height: 12),
+                            DropdownButtonFormField<String>(
+                              dropdownColor: const Color(0xFF1E293B),
+                              style: const TextStyle(color: Colors.white),
+                              isExpanded: true,
+                              decoration: _inputDecor('Attendance Record'),
+                              hint: Text(selectedEmployeeId == null ? 'Select employee first' : (attProvider.isLoading ? 'Loading records...' : 'Select Date'), style: TextStyle(color: Colors.white.withValues(alpha: 0.4))),
+                              items: empRecords.map((r) => DropdownMenuItem(value: r.id, child: Text('${r.attendanceDate} - ${r.status}', overflow: TextOverflow.ellipsis))).toList(),
+                              onChanged: editItem != null ? null : (v) => setModalState(() {
+                                selectedAttendanceId = v;
+                                final rec = empRecords.firstWhere((element) => element.id == v);
+                                origInCtrl.text = rec.checkIn ?? '';
+                                origOutCtrl.text = rec.checkOut ?? '';
+                              }),
+                            ),
+                          ],
+                        );
+                      }
                     ),
                     const SizedBox(height: 12),
                     const Text('Original Times', style: TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.bold)),
@@ -70,13 +101,22 @@ class _RegularizationListScreenState extends State<RegularizationListScreen> {
                     const SizedBox(height: 20),
                     ElevatedButton(
                       onPressed: () async {
+                        if (selectedEmployeeId == null || selectedAttendanceId == null || reasonCtrl.text.isEmpty) {
+                          if (mounted) {
+                            ScaffoldMessenger.of(this.context).showSnackBar(const SnackBar(content: Text('Please select Employee, Attendance Record, and provide a Reason.'), backgroundColor: Colors.red));
+                          }
+                          return;
+                        }
+                        
+                        String formatTime(String t) => t.contains(':') && t.split(':').length == 2 ? '$t:00' : t;
+
                         final data = {
                           'employeeId': selectedEmployeeId,
-                          'attendanceId': editItem?.attendanceId ?? '',
-                          'originalCheckIn': origInCtrl.text.isEmpty ? null : origInCtrl.text,
-                          'originalCheckOut': origOutCtrl.text.isEmpty ? null : origOutCtrl.text,
-                          'requestedCheckIn': reqInCtrl.text.isEmpty ? null : reqInCtrl.text,
-                          'requestedCheckOut': reqOutCtrl.text.isEmpty ? null : reqOutCtrl.text,
+                          'attendanceId': selectedAttendanceId,
+                          'originalCheckIn': origInCtrl.text.isEmpty ? null : formatTime(origInCtrl.text),
+                          'originalCheckOut': origOutCtrl.text.isEmpty ? null : formatTime(origOutCtrl.text),
+                          'requestedCheckIn': reqInCtrl.text.isEmpty ? null : formatTime(reqInCtrl.text),
+                          'requestedCheckOut': reqOutCtrl.text.isEmpty ? null : formatTime(reqOutCtrl.text),
                           'reason': reasonCtrl.text,
                         };
                         final provider = Provider.of<AttendanceProvider>(ctx, listen: false);
@@ -89,7 +129,12 @@ class _RegularizationListScreenState extends State<RegularizationListScreen> {
                           success = await provider.createRegularization(data);
                         }
                         if (ctx.mounted) Navigator.pop(ctx);
-                        if (mounted) ScaffoldMessenger.of(this.context).showSnackBar(SnackBar(content: Text(success ? 'Saved!' : 'Failed'), backgroundColor: success ? Colors.green : Colors.red));
+                        if (mounted) {
+                          ScaffoldMessenger.of(this.context).showSnackBar(SnackBar(
+                            content: Text(success ? 'Saved!' : 'Failed'),
+                            backgroundColor: success ? Colors.green : Colors.red,
+                          ));
+                        }
                       },
                       style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFF59E0B), foregroundColor: Colors.black, padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
                       child: Text(editItem != null ? 'Update' : 'Submit', style: const TextStyle(fontWeight: FontWeight.bold)),
@@ -148,7 +193,7 @@ class _RegularizationListScreenState extends State<RegularizationListScreen> {
                           TextButton.icon(
                             onPressed: () async {
                               final s = await Provider.of<AttendanceProvider>(context, listen: false).approveRegularization(r.id);
-                              if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(s ? 'Approved' : 'Failed'), backgroundColor: s ? Colors.green : Colors.red));
+                              if (mounted) ScaffoldMessenger.of(this.context).showSnackBar(SnackBar(content: Text(s ? 'Approved' : 'Failed'), backgroundColor: s ? Colors.green : Colors.red));
                             },
                             icon: const Icon(Icons.check_circle, size: 14, color: Colors.green),
                             label: const Text('Approve', style: TextStyle(fontSize: 12, color: Colors.green)),
@@ -156,7 +201,7 @@ class _RegularizationListScreenState extends State<RegularizationListScreen> {
                           TextButton.icon(
                             onPressed: () async {
                               final s = await Provider.of<AttendanceProvider>(context, listen: false).rejectRegularization(r.id);
-                              if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(s ? 'Rejected' : 'Failed'), backgroundColor: s ? Colors.orange : Colors.red));
+                              if (mounted) ScaffoldMessenger.of(this.context).showSnackBar(SnackBar(content: Text(s ? 'Rejected' : 'Failed'), backgroundColor: s ? Colors.orange : Colors.red));
                             },
                             icon: const Icon(Icons.cancel, size: 14, color: Colors.redAccent),
                             label: const Text('Reject', style: TextStyle(fontSize: 12, color: Colors.redAccent)),

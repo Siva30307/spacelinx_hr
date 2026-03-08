@@ -97,6 +97,14 @@ class LeaveRepository {
     await _apiClient.delete('/LeaveRequest/$id');
   }
 
+  Future<void> approveLeaveRequest(String id) async {
+    await _apiClient.put('/LeaveRequest/$id/Activate');
+  }
+
+  Future<void> rejectLeaveRequest(String id) async {
+    await _apiClient.put('/LeaveRequest/$id/DeActivate');
+  }
+
   // ─── Holiday Calendar ──────────────────────────────────────
   Future<List<HolidayCalendarReadModel>> getHolidayCalendars() async {
     final response = await _apiClient.get('/HolidayCalendar');

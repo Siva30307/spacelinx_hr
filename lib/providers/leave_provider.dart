@@ -278,6 +278,38 @@ class LeaveProvider with ChangeNotifier {
     }
   }
 
+  Future<bool> approveLeaveRequest(String id) async {
+    _isLoading = true;
+    notifyListeners();
+    try {
+      await _leaveRepository.approveLeaveRequest(id);
+      await fetchLeaveRequests();
+      return true;
+    } catch (e) {
+      debugPrint('Error approving leave request: $e');
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> rejectLeaveRequest(String id) async {
+    _isLoading = true;
+    notifyListeners();
+    try {
+      await _leaveRepository.rejectLeaveRequest(id);
+      await fetchLeaveRequests();
+      return true;
+    } catch (e) {
+      debugPrint('Error rejecting leave request: $e');
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
   // ─── Leave Balance ─────────────────────────────────────────
   Future<void> fetchLeaveBalances(String employeeId) async {
     _isLoading = true;

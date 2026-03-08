@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:spacelinx_hr/providers/employee_provider.dart';
+import 'package:spacelinx_hr/providers/organization_provider.dart';
 import 'package:spacelinx_hr/ui/widgets/common/glass_card.dart';
 import 'package:spacelinx_hr/data/models/employee_read_model.dart';
 
@@ -35,6 +36,12 @@ class _EmployeeCreateScreenState extends State<EmployeeCreateScreen> {
   final _workEmailCtrl = TextEditingController();
   final _dojCtrl = TextEditingController();
   String? _employmentType = 'Permanent';
+  String? _departmentId;
+  String? _designationId;
+  String? _gradeId;
+  String? _workLocationId;
+  String? _costCenterId;
+  String? _reportingManagerId;
 
   // Step 3: Contact & Identity
   final _personalEmailCtrl = TextEditingController();
@@ -60,6 +67,9 @@ class _EmployeeCreateScreenState extends State<EmployeeCreateScreen> {
   void initState() {
     super.initState();
     if (_isEdit) _prefillForm();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<EmployeeProvider>().fetchEmployeeLookup();
+    });
   }
 
   void _prefillForm() {
@@ -79,6 +89,12 @@ class _EmployeeCreateScreenState extends State<EmployeeCreateScreen> {
     _workEmailCtrl.text = e.workEmail;
     _dojCtrl.text = e.dateOfJoining ?? '';
     _employmentType = e.employmentType ?? 'Permanent';
+    _departmentId = e.departmentId;
+    _designationId = e.designationId;
+    _gradeId = e.gradeId;
+    _workLocationId = e.workLocationId;
+    _costCenterId = e.costCenterId;
+    _reportingManagerId = e.reportingManagerId;
     _personalEmailCtrl.text = e.personalEmail ?? '';
     _mobileCtrl.text = e.mobileNumber;
     _altPhoneCtrl.text = e.alternatePhone ?? '';
@@ -119,6 +135,12 @@ class _EmployeeCreateScreenState extends State<EmployeeCreateScreen> {
       'workEmail': _workEmailCtrl.text,
       'dateOfJoining': nullIfEmpty(_dojCtrl.text),
       'employmentType': _employmentType,
+      'departmentId': _departmentId,
+      'designationId': _designationId,
+      'gradeId': _gradeId,
+      'workLocationId': _workLocationId,
+      'costCenterId': _costCenterId,
+      'reportingManagerId': _reportingManagerId,
       'personalEmail': nullIfEmpty(_personalEmailCtrl.text),
       'mobileNumber': _mobileCtrl.text,
       'alternatePhone': nullIfEmpty(_altPhoneCtrl.text),
@@ -288,16 +310,38 @@ class _EmployeeCreateScreenState extends State<EmployeeCreateScreen> {
   }
 
   Widget _buildEmploymentDetails() {
-    return Column(
-      children: [
-        _buildTextField(_workEmailCtrl, 'Work Email *'),
-        const SizedBox(height: 12),
-        Row(children: [
-          Expanded(child: _buildDateField(_dojCtrl, 'Date of Joining *')),
-          const SizedBox(width: 12),
-          Expanded(child: _buildDropdown('Employment Type *', _employmentType, _empTypes, (v) => setState(() => _employmentType = v))),
-        ]),
-      ],
+    return Consumer2<OrganizationProvider, EmployeeProvider>(
+      builder: (context, org, emp, _) {
+        return Column(
+          children: [
+            Row(children: [
+              Expanded(child: _buildTextField(_workEmailCtrl, 'Work Email *')),
+              const SizedBox(width: 12),
+              Expanded(child: _buildDateField(_dojCtrl, 'Date of Joining *')),
+            ]),
+            const SizedBox(height: 12),
+            Row(children: [
+              Expanded(child: _buildCustomDropdown('Department', _departmentId, org.departments.map((d) => DropdownMenuItem(value: d.id, child: Text(d.name, overflow: TextOverflow.ellipsis))).toList(), (v) => setState(() => _departmentId = v))),
+              const SizedBox(width: 12),
+              Expanded(child: _buildCustomDropdown('Designation', _designationId, org.designations.map((d) => DropdownMenuItem(value: d.id, child: Text(d.name, overflow: TextOverflow.ellipsis))).toList(), (v) => setState(() => _designationId = v))),
+            ]),
+            const SizedBox(height: 12),
+            Row(children: [
+              Expanded(child: _buildCustomDropdown('Grade', _gradeId, org.grades.map((d) => DropdownMenuItem(value: d.id, child: Text(d.name, overflow: TextOverflow.ellipsis))).toList(), (v) => setState(() => _gradeId = v))),
+              const SizedBox(width: 12),
+              Expanded(child: _buildCustomDropdown('Work Location', _workLocationId, org.workLocations.map((d) => DropdownMenuItem(value: d.id, child: Text(d.name, overflow: TextOverflow.ellipsis))).toList(), (v) => setState(() => _workLocationId = v))),
+            ]),
+            const SizedBox(height: 12),
+            Row(children: [
+              Expanded(child: _buildCustomDropdown('Cost Center', _costCenterId, org.costCenters.map((d) => DropdownMenuItem(value: d.id, child: Text(d.name, overflow: TextOverflow.ellipsis))).toList(), (v) => setState(() => _costCenterId = v))),
+              const SizedBox(width: 12),
+              Expanded(child: _buildCustomDropdown('Reporting Manager', _reportingManagerId, emp.employeeLookup.map((d) => DropdownMenuItem(value: d.id, child: Text(d.displayName ?? '${d.firstName} ${d.lastName}', overflow: TextOverflow.ellipsis))).toList(), (v) => setState(() => _reportingManagerId = v))),
+            ]),
+            const SizedBox(height: 12),
+            _buildDropdown('Employment Type *', _employmentType, _empTypes, (v) => setState(() => _employmentType = v)),
+          ],
+        );
+      }
     );
   }
 
@@ -393,10 +437,20 @@ class _EmployeeCreateScreenState extends State<EmployeeCreateScreen> {
   }
 
   Widget _buildDropdown(String label, String? value, List<String> items, ValueChanged<String?> onChanged) {
+    return _buildCustomDropdown(
+      label, 
+      value, 
+      items.map((s) => DropdownMenuItem(value: s, child: Text(s, overflow: TextOverflow.ellipsis))).toList(), 
+      onChanged
+    );
+  }
+
+  Widget _buildCustomDropdown(String label, String? value, List<DropdownMenuItem<String>> items, ValueChanged<String?> onChanged) {
     return DropdownButtonFormField<String>(
       value: value,
       dropdownColor: const Color(0xFF1E293B),
-      style: const TextStyle(color: Colors.white, fontSize: 14),
+      style: const TextStyle(color: Colors.white, fontSize: 13),
+      isExpanded: true,
       decoration: InputDecoration(
         labelText: label,
         labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.6), fontSize: 13),
@@ -404,7 +458,10 @@ class _EmployeeCreateScreenState extends State<EmployeeCreateScreen> {
         focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color(0xFF6366F1))),
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       ),
-      items: items.map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
+      items: [
+        const DropdownMenuItem<String>(value: null, child: Text('None', style: TextStyle(color: Colors.white54))),
+        ...items,
+      ],
       onChanged: onChanged,
     );
   }

@@ -1,22 +1,19 @@
+import 'package:json_annotation/json_annotation.dart';
+
+part 'dashboard_summary_models.g.dart';
+
+@JsonSerializable()
 class DimensionCount {
   final String label;
   final int count;
 
   DimensionCount({required this.label, required this.count});
 
-  factory DimensionCount.fromJson(Map<String, dynamic> json) {
-    return DimensionCount(
-      label: json['label'] as String? ?? '',
-      count: json['count'] as int? ?? 0,
-    );
-  }
-
-  Map<String, dynamic> toJson() => {
-        'label': label,
-        'count': count,
-      };
+  factory DimensionCount.fromJson(Map<String, dynamic> json) => _$DimensionCountFromJson(json);
+  Map<String, dynamic> toJson() => _$DimensionCountToJson(this);
 }
 
+@JsonSerializable()
 class HeadcountSummary {
   final int totalActive;
   final int totalOnNotice;
@@ -26,49 +23,21 @@ class HeadcountSummary {
   final List<DimensionCount> byGender;
 
   HeadcountSummary({
-    required this.totalActive,
-    required this.totalOnNotice,
-    required this.byDepartment,
-    required this.byLocation,
-    required this.byGrade,
-    required this.byGender,
+    this.totalActive = 0,
+    this.totalOnNotice = 0,
+    this.byDepartment = const [],
+    this.byLocation = const [],
+    this.byGrade = const [],
+    this.byGender = const [],
   });
 
-  factory HeadcountSummary.fromJson(Map<String, dynamic> json) {
-    return HeadcountSummary(
-      totalActive: json['totalActive'] as int? ?? 0,
-      totalOnNotice: json['totalOnNotice'] as int? ?? 0,
-      byDepartment: (json['byDepartment'] as List?)
-              ?.map((e) => DimensionCount.fromJson(e as Map<String, dynamic>))
-              .toList() ??
-          [],
-      byLocation: (json['byLocation'] as List?)
-              ?.map((e) => DimensionCount.fromJson(e as Map<String, dynamic>))
-              .toList() ??
-          [],
-      byGrade: (json['byGrade'] as List?)
-              ?.map((e) => DimensionCount.fromJson(e as Map<String, dynamic>))
-              .toList() ??
-          [],
-      byGender: (json['byGender'] as List?)
-              ?.map((e) => DimensionCount.fromJson(e as Map<String, dynamic>))
-              .toList() ??
-          [],
-    );
-  }
-
-  Map<String, dynamic> toJson() => {
-        'totalActive': totalActive,
-        'totalOnNotice': totalOnNotice,
-        'byDepartment': byDepartment.map((e) => e.toJson()).toList(),
-        'byLocation': byLocation.map((e) => e.toJson()).toList(),
-        'byGrade': byGrade.map((e) => e.toJson()).toList(),
-        'byGender': byGender.map((e) => e.toJson()).toList(),
-      };
+  factory HeadcountSummary.fromJson(Map<String, dynamic> json) => _$HeadcountSummaryFromJson(json);
+  Map<String, dynamic> toJson() => _$HeadcountSummaryToJson(this);
 }
 
+@JsonSerializable()
 class AttendanceSummary {
-  final String? date;
+  final String date;
   final int present;
   final int absent;
   final int onLeave;
@@ -78,41 +47,131 @@ class AttendanceSummary {
   final int total;
 
   AttendanceSummary({
-    this.date,
-    required this.present,
-    required this.absent,
-    required this.onLeave,
-    required this.wfh,
-    required this.halfDay,
-    required this.holiday,
-    required this.total,
+    required this.date,
+    this.present = 0,
+    this.absent = 0,
+    this.onLeave = 0,
+    this.wfh = 0,
+    this.halfDay = 0,
+    this.holiday = 0,
+    this.total = 0,
   });
 
-  factory AttendanceSummary.fromJson(Map<String, dynamic> json) {
-    return AttendanceSummary(
-      date: json['date'] as String?,
-      present: json['present'] as int? ?? 0,
-      absent: json['absent'] as int? ?? 0,
-      onLeave: json['onLeave'] as int? ?? 0,
-      wfh: json['wfh'] as int? ?? 0,
-      halfDay: json['halfDay'] as int? ?? 0,
-      holiday: json['holiday'] as int? ?? 0,
-      total: json['total'] as int? ?? 0,
-    );
-  }
-
-  Map<String, dynamic> toJson() => {
-        'date': date,
-        'present': present,
-        'absent': absent,
-        'onLeave': onLeave,
-        'wfh': wfh,
-        'halfDay': halfDay,
-        'holiday': holiday,
-        'total': total,
-      };
+  factory AttendanceSummary.fromJson(Map<String, dynamic> json) => _$AttendanceSummaryFromJson(json);
+  Map<String, dynamic> toJson() => _$AttendanceSummaryToJson(this);
 }
 
+@JsonSerializable()
+class LeaveTypeSummary {
+  final String typeName;
+  final double totalQuota;
+  final double used;
+  final double available;
+
+  LeaveTypeSummary({
+    required this.typeName,
+    this.totalQuota = 0,
+    this.used = 0,
+    this.available = 0,
+  });
+
+  factory LeaveTypeSummary.fromJson(Map<String, dynamic> json) => _$LeaveTypeSummaryFromJson(json);
+  Map<String, dynamic> toJson() => _$LeaveTypeSummaryToJson(this);
+}
+
+@JsonSerializable()
+class LeaveSummary {
+  final int pendingRequests;
+  final List<LeaveTypeSummary> byType;
+
+  LeaveSummary({
+    this.pendingRequests = 0,
+    this.byType = const [],
+  });
+
+  factory LeaveSummary.fromJson(Map<String, dynamic> json) => _$LeaveSummaryFromJson(json);
+  Map<String, dynamic> toJson() => _$LeaveSummaryToJson(this);
+}
+
+@JsonSerializable()
+class MonthlyPayrollTrend {
+  final int month;
+  final int year;
+  final double totalGross;
+  final double totalNet;
+
+  MonthlyPayrollTrend({
+    required this.month,
+    required this.year,
+    this.totalGross = 0,
+    this.totalNet = 0,
+  });
+
+  factory MonthlyPayrollTrend.fromJson(Map<String, dynamic> json) => _$MonthlyPayrollTrendFromJson(json);
+  Map<String, dynamic> toJson() => _$MonthlyPayrollTrendToJson(this);
+}
+
+@JsonSerializable()
+class PayrollSummary {
+  final int lastRunMonth;
+  final int lastRunYear;
+  final double totalGross;
+  final double totalDeductions;
+  final double totalNet;
+  final int employeeCount;
+  final List<MonthlyPayrollTrend> monthlyTrend;
+
+  PayrollSummary({
+    required this.lastRunMonth,
+    required this.lastRunYear,
+    this.totalGross = 0,
+    this.totalDeductions = 0,
+    this.totalNet = 0,
+    this.employeeCount = 0,
+    this.monthlyTrend = const [],
+  });
+
+  factory PayrollSummary.fromJson(Map<String, dynamic> json) => _$PayrollSummaryFromJson(json);
+  Map<String, dynamic> toJson() => _$PayrollSummaryToJson(this);
+}
+
+@JsonSerializable()
+class RecentSeparation {
+  final String employeeName;
+  final String? department;
+  final String separationType;
+  final String lastWorkingDate;
+
+  RecentSeparation({
+    required this.employeeName,
+    this.department,
+    required this.separationType,
+    required this.lastWorkingDate,
+  });
+
+  factory RecentSeparation.fromJson(Map<String, dynamic> json) => _$RecentSeparationFromJson(json);
+  Map<String, dynamic> toJson() => _$RecentSeparationToJson(this);
+}
+
+@JsonSerializable()
+class AttritionSummary {
+  final double monthlyRate;
+  final double quarterlyRate;
+  final double annualRate;
+  final List<RecentSeparation> recentSeparations;
+
+  AttritionSummary({
+    this.monthlyRate = 0,
+    this.quarterlyRate = 0,
+    this.annualRate = 0,
+    this.recentSeparations = const [],
+  });
+
+  factory AttritionSummary.fromJson(Map<String, dynamic> json) => _$AttritionSummaryFromJson(json);
+  Map<String, dynamic> toJson() => _$AttritionSummaryToJson(this);
+}
+
+@JsonSerializable()
 class HeadcountTrend {
   final int month;
   final int year;
@@ -124,17 +183,6 @@ class HeadcountTrend {
     required this.count,
   });
 
-  factory HeadcountTrend.fromJson(Map<String, dynamic> json) {
-    return HeadcountTrend(
-      month: json['month'] as int? ?? 0,
-      year: json['year'] as int? ?? 0,
-      count: json['count'] as int? ?? 0,
-    );
-  }
-
-  Map<String, dynamic> toJson() => {
-        'month': month,
-        'year': year,
-        'count': count,
-      };
+  factory HeadcountTrend.fromJson(Map<String, dynamic> json) => _$HeadcountTrendFromJson(json);
+  Map<String, dynamic> toJson() => _$HeadcountTrendToJson(this);
 }
